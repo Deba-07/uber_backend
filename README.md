@@ -6,14 +6,6 @@ This document describes the user authentication endpoints available in this repo
 
 **Mount path**: the routes are exposed under `/users` (e.g. `/users/register`).
 
-# Uber Backend — API Documentation
-
-This document describes the user authentication endpoints available in this repository.
-
-**Base URL (local)**: `http://localhost:3000`
-
-**Mount path**: the routes are exposed under `/users` (e.g. `/users/register`).
-
 ---
 
 **Quick Notes**:
