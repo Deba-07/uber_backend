@@ -129,6 +129,82 @@ curl -X POST http://localhost:3000/users/login \
 
 ---
 
+## GET /users/profile
+
+**Endpoint**: `GET /users/profile`
+
+**HTTP**: `GET`
+
+### Description
+
+Protected route. Returns the authenticated user's profile. The route requires a valid JWT provided either in a cookie named `token` or in the `Authorization: Bearer <token>` header. The middleware verifies the token and loads the user onto `req.user`.
+
+### Request
+
+- Headers: `Authorization: Bearer <token>` OR cookie `token` set
+- Body: none
+
+### Success Response (200 OK)
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "fullName": { "firstName": "John", "lastName": "Doe" },
+  "email": "john.doe@example.com",
+  "socketId": null,
+  "__v": 0
+}
+```
+
+### Errors
+
+- `401` — Unauthorized: no token provided, token invalid, token blacklisted, or user not found
+- `500` — internal server error
+
+### Example (cURL)
+
+```bash
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer <jwt_token_here>"
+```
+
+---
+
+## GET /users/logout
+
+**Endpoint**: `GET /users/logout`
+
+**HTTP**: `GET`
+
+### Description
+
+Protected route. Logs the user out by clearing the `token` cookie and storing the token in a blacklist collection so it cannot be reused. The blacklist entries expire automatically (TTL) as configured in the model.
+
+### Request
+
+- Headers: `Authorization: Bearer <token>` OR cookie `token` set
+- Body: none
+
+### Success Response (200 OK)
+
+```json
+{ "message": "Logged out" }
+```
+
+### Errors
+
+- `401` — Unauthorized: no token provided, token invalid, or token already blacklisted
+- `500` — internal server error
+
+### Example (cURL)
+
+```bash
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer <jwt_token_here>"
+```
+
+---
+
 ## Status Codes Summary
 
 - `201` — User created (register)
