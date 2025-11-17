@@ -16,6 +16,12 @@ module.exports.authUser = async (req, res, next) => {
         .json({ message: "Unauthorized: No token provided" });
     }
 
+    const isBlackListed = await userModel.findOne({ token: token})
+
+    if(isBlackListed){
+      return res.status(401).json({ message: "Unauthorized" })
+    }
+
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
