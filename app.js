@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const connectToDb = require("./db/db");
 
 const userRoutes = require("./routes/user.routes");
+const captainRoutes = require("./routes/captain.routes");
 
 connectToDb();
 app.use(cors());
@@ -19,5 +20,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", userRoutes);
+app.use("/captains", captainRoutes)
 
 module.exports = app;
