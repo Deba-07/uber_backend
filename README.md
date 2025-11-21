@@ -55,7 +55,6 @@ Field rules:
     "_id": "507f1f77bcf86cd799439011",
     "fullName": { "firstName": "John", "lastName": "Doe" },
     "email": "john.doe@example.com",
-    "socketId": null,
     "__v": 0
   }
 }
@@ -108,7 +107,6 @@ Authenticate an existing user by `email` and `password`. Returns a JWT token and
     "_id": "507f1f77bcf86cd799439011",
     "fullName": { "firstName": "John", "lastName": "Doe" },
     "email": "john.doe@example.com",
-    "socketId": null,
     "__v": 0
   }
 }
@@ -151,7 +149,6 @@ Protected route. Returns the authenticated user's profile. The route requires a 
   "_id": "507f1f77bcf86cd799439011",
   "fullName": { "firstName": "John", "lastName": "Doe" },
   "email": "john.doe@example.com",
-  "socketId": null,
   "__v": 0
 }
 ```
@@ -254,7 +251,6 @@ Field rules (from `captain.routes` validation):
     "_id": "507f1f77bcf86cd799439022",
     "fullName": { "firstName": "Jane", "lastName": "Rider" },
     "email": "captain.jane@example.com",
-    "socketId": null,
     "status": "inactive",
     "vehicle": {
       "color": "red",
@@ -280,6 +276,147 @@ Field rules (from `captain.routes` validation):
 curl -X POST http://localhost:3000/captains/register \
   -H "Content-Type: application/json" \
   -d '{"email":"captain.jane@example.com","fullName":{"firstName":"Jane","lastName":"Rider"},"password":"strongPassword123","vehicle":{"color":"red","plate":"AB12","capacity":4,"vehicleType":"car"}}'
+```
+
+---
+
+## POST /captains/login
+
+**Endpoint**: `POST /captains/login`
+
+**HTTP**: `POST`
+
+### Description
+
+Authenticate a captain using `email` and `password`. Returns a JWT token and the captain object on success. The controller sets a `token` cookie as well.
+
+### Request
+
+- Headers: `Content-Type: application/json`
+- Body (JSON):
+
+```json
+{
+  "email": "captain.jane@example.com",
+  "password": "strongPassword123"
+}
+```
+
+### Success Response (200 OK)
+
+```json
+{
+  "token": "<jwt_token_here>",
+  "captain": {
+    "_id": "507f1f77bcf86cd799439022",
+    "fullName": { "firstName": "Jane", "lastName": "Rider" },
+    "email": "captain.jane@example.com",
+    "status": "inactive",
+    "vehicle": {
+      "color": "red",
+      "plate": "AB12",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "__v": 0
+  }
+}
+```
+
+### Errors
+
+- `401` — invalid credentials: `{ "message": "Invalid email or password" }`
+- `400` — validation errors (returns `{ "errors": [...] }`)
+
+### Example (cURL)
+
+```bash
+curl -X POST http://localhost:3000/captains/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"captain.jane@example.com","password":"strongPassword123"}'
+```
+
+---
+
+## GET /captains/profile
+
+**Endpoint**: `GET /captains/profile`
+
+**HTTP**: `GET`
+
+### Description
+
+Protected route. Returns the authenticated captain's profile. Requires a valid JWT provided either in a cookie named `token` or in the `Authorization: Bearer <token>` header. The middleware verifies the token and loads the captain onto `req.captain`.
+
+### Request
+
+- Headers: `Authorization: Bearer <token>` OR cookie `token` set
+- Body: none
+
+### Success Response (200 OK)
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439022",
+  "fullName": { "firstName": "Jane", "lastName": "Rider" },
+  "email": "captain.jane@example.com",
+  "status": "inactive",
+  "vehicle": {
+    "color": "red",
+    "plate": "AB12",
+    "capacity": 4,
+    "vehicleType": "car"
+  },
+  "location": { "lat": null, "lng": null },
+  "__v": 0
+}
+```
+
+### Errors
+
+- `401` — Unauthorized: no token provided, token invalid, token blacklisted, or captain not found
+- `500` — internal server error
+
+### Example (cURL)
+
+```bash
+curl -X GET http://localhost:3000/captains/profile \
+  -H "Authorization: Bearer <jwt_token_here>"
+```
+
+---
+
+## GET /captains/logout
+
+**Endpoint**: `GET /captains/logout`
+
+**HTTP**: `GET`
+
+### Description
+
+Protected route. Logs the captain out by clearing the `token` cookie and storing the token in the blacklist collection so it cannot be reused. The blacklist entries expire automatically (TTL) as configured in the model.
+
+### Request
+
+- Headers: `Authorization: Bearer <token>` OR cookie `token` set
+- Body: none
+
+### Success Response (200 OK)
+
+```json
+{ "message": "logged out" }
+```
+
+### Errors
+
+- `401` — Unauthorized: no token provided, token invalid, or token already blacklisted
+- `500` — internal server error
+
+### Example (cURL)
+
+```bash
+curl -X GET http://localhost:3000/captains/logout \
+  -H "Authorization: Bearer <jwt_token_here>"
 ```
 
 ---
