@@ -205,6 +205,85 @@ curl -X GET http://localhost:3000/users/logout \
 
 ---
 
+## POST /captains/register
+
+**Endpoint**: `POST /captains/register`
+
+**HTTP**: `POST`
+
+### Description
+
+Register a new captain (driver). Validates the captain's personal details and vehicle information, hashes the password, stores the captain, and returns a JWT token and the created captain object.
+
+### Request
+
+- Headers: `Content-Type: application/json`
+- Body (JSON):
+
+```json
+{
+  "email": "captain.jane@example.com",
+  "fullName": { "firstName": "Jane", "lastName": "Rider" },
+  "password": "strongPassword123",
+  "vehicle": {
+    "color": "red",
+    "plate": "AB12",
+    "capacity": 4,
+    "vehicleType": "car"
+  }
+}
+```
+
+Field rules (from `captain.routes` validation):
+
+- `email` (string, required): valid email
+- `fullName.firstName` (string, required): min 3 chars
+- `fullName.lastName` (string, optional): min 3 chars if provided
+- `password` (string, required): min 6 chars
+- `vehicle.color` (string, required)
+- `vehicle.plate` (string, required): min 4 chars
+- `vehicle.capacity` (integer, required): min 1
+- `vehicle.vehicleType` (string, required): one of `car`, `motorcycle`, `auto`
+
+### Success Response (201 Created)
+
+```json
+{
+  "token": "<jwt_token_here>",
+  "captain": {
+    "_id": "507f1f77bcf86cd799439022",
+    "fullName": { "firstName": "Jane", "lastName": "Rider" },
+    "email": "captain.jane@example.com",
+    "socketId": null,
+    "status": "inactive",
+    "vehicle": {
+      "color": "red",
+      "plate": "AB12",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "location": { "lat": null, "lng": null },
+    "__v": 0
+  }
+}
+```
+
+### Errors
+
+- `400` — validation errors (returns an `errors` array from `express-validator`)
+- `400` — captain already exists (controller returns `{ message: "Captain already exists" }`)
+- `500` — internal server error
+
+### Example (cURL)
+
+```bash
+curl -X POST http://localhost:3000/captains/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"captain.jane@example.com","fullName":{"firstName":"Jane","lastName":"Rider"},"password":"strongPassword123","vehicle":{"color":"red","plate":"AB12","capacity":4,"vehicleType":"car"}}'
+```
+
+---
+
 ## Status Codes Summary
 
 - `201` — User created (register)
