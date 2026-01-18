@@ -82,8 +82,6 @@ curl -X POST http://localhost:3000/users/register \
 
 **HTTP**: `POST`
 
-### Description
-
 Authenticate an existing user by `email` and `password`. Returns a JWT token and the user object on success.
 
 ### Request
@@ -93,9 +91,6 @@ Authenticate an existing user by `email` and `password`. Returns a JWT token and
 
 ```json
 {
-  "email": "john.doe@example.com",
-  "password": "securePassword123"
-}
 ```
 
 ### Success Response (200 OK)
@@ -103,8 +98,6 @@ Authenticate an existing user by `email` and `password`. Returns a JWT token and
 ```json
 {
   "token": "<jwt_token_here>",
-  "user": {
-    "_id": "507f1f77bcf86cd799439011",
     "fullName": { "firstName": "John", "lastName": "Doe" },
     "email": "john.doe@example.com",
     "__v": 0
@@ -115,7 +108,6 @@ Authenticate an existing user by `email` and `password`. Returns a JWT token and
 ### Errors
 
 - `401` — authentication failed: `{ "message": "Invalid email or password" }`
-- `400` — validation errors (returns `{ "error": [ ... ] }`)
 
 ### Example (cURL)
 
@@ -128,8 +120,6 @@ curl -X POST http://localhost:3000/users/login \
 ---
 
 ## GET /users/profile
-
-**Endpoint**: `GET /users/profile`
 
 **HTTP**: `GET`
 
@@ -146,8 +136,6 @@ Protected route. Returns the authenticated user's profile. The route requires a 
 
 ```json
 {
-  "_id": "507f1f77bcf86cd799439011",
-  "fullName": { "firstName": "John", "lastName": "Doe" },
   "email": "john.doe@example.com",
   "__v": 0
 }
@@ -156,7 +144,6 @@ Protected route. Returns the authenticated user's profile. The route requires a 
 ### Errors
 
 - `401` — Unauthorized: no token provided, token invalid, token blacklisted, or user not found
-- `500` — internal server error
 
 ### Example (cURL)
 
@@ -171,8 +158,6 @@ curl -X GET http://localhost:3000/users/profile \
 
 **Endpoint**: `GET /users/logout`
 
-**HTTP**: `GET`
-
 ### Description
 
 Protected route. Logs the user out by clearing the `token` cookie and storing the token in a blacklist collection so it cannot be reused. The blacklist entries expire automatically (TTL) as configured in the model.
@@ -184,9 +169,7 @@ Protected route. Logs the user out by clearing the `token` cookie and storing th
 
 ### Success Response (200 OK)
 
-```json
-{ "message": "Logged out" }
-```
+````json
 
 ### Errors
 
@@ -197,8 +180,7 @@ Protected route. Logs the user out by clearing the `token` cookie and storing th
 
 ```bash
 curl -X GET http://localhost:3000/users/logout \
-  -H "Authorization: Bearer <jwt_token_here>"
-```
+````
 
 ---
 
@@ -212,8 +194,6 @@ curl -X GET http://localhost:3000/users/logout \
 
 Register a new captain (driver). Validates the captain's personal details and vehicle information, hashes the password, stores the captain, and returns a JWT token and the created captain object.
 
-### Request
-
 - Headers: `Content-Type: application/json`
 - Body (JSON):
 
@@ -222,8 +202,6 @@ Register a new captain (driver). Validates the captain's personal details and ve
   "email": "captain.jane@example.com",
   "fullName": { "firstName": "Jane", "lastName": "Rider" },
   "password": "strongPassword123",
-  "vehicle": {
-    "color": "red",
     "plate": "AB12",
     "capacity": 4,
     "vehicleType": "car"
@@ -244,10 +222,8 @@ Field rules (from `captain.routes` validation):
 
 ### Success Response (201 Created)
 
-```json
+````json
 {
-  "token": "<jwt_token_here>",
-  "captain": {
     "_id": "507f1f77bcf86cd799439022",
     "fullName": { "firstName": "Jane", "lastName": "Rider" },
     "email": "captain.jane@example.com",
@@ -261,8 +237,6 @@ Field rules (from `captain.routes` validation):
     "location": { "lat": null, "lng": null },
     "__v": 0
   }
-}
-```
 
 ### Errors
 
@@ -273,10 +247,9 @@ Field rules (from `captain.routes` validation):
 ### Example (cURL)
 
 ```bash
-curl -X POST http://localhost:3000/captains/register \
   -H "Content-Type: application/json" \
   -d '{"email":"captain.jane@example.com","fullName":{"firstName":"Jane","lastName":"Rider"},"password":"strongPassword123","vehicle":{"color":"red","plate":"AB12","capacity":4,"vehicleType":"car"}}'
-```
+````
 
 ---
 
@@ -421,6 +394,90 @@ curl -X GET http://localhost:3000/captains/logout \
 
 ---
 
+## Maps Endpoints
+
+All endpoints below require authentication (JWT in cookie or Authorization header).
+
+**Mount path**: `/maps`
+
+---
+
+### GET /maps/get-coordinates
+
+**Endpoint**: `GET /maps/get-coordinates`
+
+**Query Parameters:**
+
+- `address` (string, required): Address to geocode (min 3 chars)
+
+**Success Response (200 OK):**
+
+```json
+{
+  "ltd": 28.6139,
+  "lng": 77.209
+}
+```
+
+**Errors:**
+
+- `400` — validation errors
+- `404` — coordinates not found
+
+---
+
+### GET /maps/get-distance-time
+
+**Endpoint**: `GET /maps/get-distance-time`
+
+**Query Parameters:**
+
+- `origin` (string, required): Origin address (min 3 chars)
+- `destination` (string, required): Destination address (min 3 chars)
+
+**Success Response (200 OK):**
+
+```json
+{
+  "distance": { "text": "5.2 km", "value": 5200 },
+  "duration": { "text": "14 mins", "value": 840 },
+  "status": "OK"
+}
+```
+
+**Errors:**
+
+- `400` — validation errors
+- `500` — internal server error
+
+---
+
+### GET /maps/get-suggestions
+
+**Endpoint**: `GET /maps/get-suggestions`
+
+**Query Parameters:**
+
+- `input` (string, required): Partial address or place name (min 3 chars)
+
+**Success Response (200 OK):**
+
+```json
+[
+  "Connaught Place, New Delhi, Delhi, India",
+  "New Delhi Railway Station, Delhi, India"
+]
+```
+
+**Errors:**
+
+- `400` — validation errors
+- `500` — internal server error
+
+---
+
+---
+
 ## Status Codes Summary
 
 - `201` — User created (register)
@@ -454,7 +511,3 @@ npm start
 ```
 
 Server runs at `http://localhost:3000` by default.
-
----
-
-If you'd like, I can convert this into an OpenAPI (Swagger) spec or add a Postman collection next. 3. Start server:
